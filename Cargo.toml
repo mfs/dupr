@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Mike Sampson <mike@sambodata.com>"]
 
 [dependencies]
+clap = "2.26.2"
+walkdir = "1"
