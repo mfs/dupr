@@ -12,6 +12,13 @@ use walkdir::WalkDir;
 use twox_hash::XxHash;
 use std::hash::Hasher;
 
+struct Stats {
+    file_count: u64,
+    total_size: u64,
+    duplicate_count: u64,
+}
+
+
 fn main() {
     let matches = App::new("dupr")
         .version("0.1.0")
@@ -22,9 +29,21 @@ fn main() {
                 .help("Directory to process")
                 .required(true),
         )
+        .arg(
+            Arg::with_name("summary")
+                .short("s")
+                .long("summary")
+                .help("Print out summary information after duplicates")
+        )
         .get_matches();
 
     let mut files = HashMap::new();
+
+    let mut stats = Stats {
+        file_count: 0,
+        total_size: 0,
+        duplicate_count: 0,
+    };
 
     for entry in WalkDir::new(matches.value_of("DIR").unwrap()) {
         let entry = entry.unwrap();
@@ -34,6 +53,9 @@ fn main() {
         }
 
         let metadata = entry.metadata().unwrap();
+
+        stats.file_count += 1;
+        stats.total_size += metadata.len();
 
         let path = entry.path().to_path_buf();
 
@@ -57,10 +79,20 @@ fn main() {
             if paths.len() < 2 {
                 continue;
             }
+            stats.duplicate_count += paths.len() as u64;
             for p in paths {
                 println!("{:016x} - {}", hash, p.display());
             }
         }
+    }
+
+    if matches.is_present("summary")  {
+        println!(
+            "Processed {} files with a total size of {} bytes. {} duplicates found.",
+            stats.file_count,
+            stats.total_size,
+            stats.duplicate_count
+        );
     }
 }
 
