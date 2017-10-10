@@ -59,9 +59,8 @@ fn hash_file<P: AsRef<Path>>(path: P) -> u64 {
         if n == 0 {
             break;
         }
-        hash.write(&buffer[0 .. n]);
+        hash.write(&buffer[0..n]);
     }
 
     hash.finish()
 }
-
