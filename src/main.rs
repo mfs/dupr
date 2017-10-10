@@ -40,10 +40,26 @@ fn main() {
         files.entry(metadata.len()).or_insert(Vec::new()).push(path);
     }
 
-    for (f_len, f_paths) in files {
-        println!("=== {} - {} ===", f_len, f_paths.len());
+    for f_paths in files.values() {
+        if f_paths.len() == 1 {
+            continue;
+        }
+
+        let mut hashes = HashMap::new();
         for f_path in f_paths {
-            println!("    {} - {:x}", f_path.display(), hash_file(&f_path));
+            hashes
+                .entry(hash_file(&f_path))
+                .or_insert(Vec::new())
+                .push(f_path);
+        }
+
+        for (hash, paths) in hashes {
+            if paths.len() < 2 {
+                continue;
+            }
+            for p in paths {
+                println!("{:016x} - {}", hash, p.display());
+            }
         }
     }
 }
