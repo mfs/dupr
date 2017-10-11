@@ -5,7 +5,7 @@ extern crate twox_hash;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use clap::{App, Arg};
 use walkdir::WalkDir;
@@ -19,33 +19,11 @@ struct Stats {
 }
 
 
-fn main() {
-    let matches = App::new("dupr")
-        .version("0.1.0")
-        .author("Mike Sampson")
-        .about("Duplicate file finder")
-        .arg(
-            Arg::with_name("DIR")
-                .help("Directory to process")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("summary")
-                .short("s")
-                .long("summary")
-                .help("Print out summary information after duplicates")
-        )
-        .get_matches();
+fn collect_files(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
     let mut files = HashMap::new();
 
-    let mut stats = Stats {
-        file_count: 0,
-        total_size: 0,
-        duplicate_count: 0,
-    };
-
-    for entry in WalkDir::new(matches.value_of("DIR").unwrap()) {
+    for entry in WalkDir::new(path) {
         let entry = entry.unwrap();
 
         if !entry.file_type().is_file() {
@@ -65,6 +43,35 @@ fn main() {
 
         files.entry(metadata.len()).or_insert(Vec::new()).push(path);
     }
+
+    files
+}
+
+fn main() {
+    let matches = App::new("dupr")
+        .version("0.1.0")
+        .author("Mike Sampson")
+        .about("Duplicate file finder")
+        .arg(
+            Arg::with_name("DIR")
+                .help("Directory to process")
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("summary")
+                .short("s")
+                .long("summary")
+                .help("Print out summary information after duplicates")
+        )
+        .get_matches();
+
+    let mut stats = Stats {
+        file_count: 0,
+        total_size: 0,
+        duplicate_count: 0,
+    };
+
+    let files = collect_files(matches.value_of("DIR").unwrap(), &mut stats);
 
     for f_paths in files.values() {
         if f_paths.len() == 1 {
