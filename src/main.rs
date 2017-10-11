@@ -54,6 +54,10 @@ fn main() {
 
         let metadata = entry.metadata().unwrap();
 
+        if metadata.len() == 0 {
+            continue;
+        }
+
         stats.file_count += 1;
         stats.total_size += metadata.len();
 
