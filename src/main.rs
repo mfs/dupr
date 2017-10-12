@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use clap::{App, Arg};
+use clap::{App, Arg, ArgMatches};
 use walkdir::WalkDir;
 use twox_hash::XxHash;
 use std::hash::Hasher;
@@ -17,6 +17,22 @@ struct Stats {
     file_count: u64,
     total_size: u64,
     duplicate_count: u64,
+}
+
+fn parse_args<'a>() -> ArgMatches<'a> {
+    App::new("dupr")
+        .version("0.1.0")
+        .author("Mike Sampson")
+        .about("Duplicate file finder")
+        .arg(
+            Arg::with_name("DIR")
+                .help("Directory to process")
+                .required(true),
+        )
+        .arg(Arg::with_name("summary").short("s").long("summary").help(
+            "Print out summary information after duplicates",
+        ))
+        .get_matches()
 }
 
 
@@ -49,24 +65,8 @@ fn collect_files(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 }
 
 
-
 fn main() {
-    let matches = App::new("dupr")
-        .version("0.1.0")
-        .author("Mike Sampson")
-        .about("Duplicate file finder")
-        .arg(
-            Arg::with_name("DIR")
-                .help("Directory to process")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("summary")
-                .short("s")
-                .long("summary")
-                .help("Print out summary information after duplicates")
-        )
-        .get_matches();
+    let matches = parse_args();
 
     let mut stats: Stats = Default::default();
 
@@ -90,7 +90,7 @@ fn main() {
         }
     }
 
-    if matches.is_present("summary")  {
+    if matches.is_present("summary") {
         println!(
             "Processed {} files with a total size of {} bytes. {} duplicates found.",
             stats.file_count,
