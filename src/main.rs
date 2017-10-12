@@ -48,6 +48,8 @@ fn collect_files(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
     files
 }
 
+
+
 fn main() {
     let matches = App::new("dupr")
         .version("0.1.0")
@@ -70,10 +72,7 @@ fn main() {
 
     let files = collect_files(matches.value_of("DIR").unwrap(), &mut stats);
 
-    for f_paths in files.values() {
-        if f_paths.len() == 1 {
-            continue;
-        }
+    for f_paths in files.values().filter(|x| x.len() > 1) {
 
         let mut hashes = HashMap::new();
         for f_path in f_paths {
@@ -83,10 +82,7 @@ fn main() {
                 .push(f_path);
         }
 
-        for (hash, paths) in hashes {
-            if paths.len() < 2 {
-                continue;
-            }
+        for (hash, paths) in hashes.iter().filter(|&(_, v)| v.len() > 1) {
             stats.duplicate_count += paths.len() as u64;
             for p in paths {
                 println!("{:016x} - {}", hash, p.display());
