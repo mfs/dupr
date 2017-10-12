@@ -12,6 +12,7 @@ use walkdir::WalkDir;
 use twox_hash::XxHash;
 use std::hash::Hasher;
 
+#[derive(Default)]
 struct Stats {
     file_count: u64,
     total_size: u64,
@@ -65,11 +66,7 @@ fn main() {
         )
         .get_matches();
 
-    let mut stats = Stats {
-        file_count: 0,
-        total_size: 0,
-        duplicate_count: 0,
-    };
+    let mut stats: Stats = Default::default();
 
     let files = collect_files(matches.value_of("DIR").unwrap(), &mut stats);
 
