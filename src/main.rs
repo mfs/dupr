@@ -3,9 +3,11 @@ extern crate walkdir;
 extern crate twox_hash;
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::os::linux::fs::MetadataExt;
 
 use clap::{App, Arg, ArgMatches};
 use walkdir::WalkDir;
@@ -74,8 +76,20 @@ fn main() {
 
     for f_paths in files.values().filter(|x| x.len() > 1) {
 
-        let mut hashes = HashMap::new();
+        // Avoid hardlinks to same inode
+        let mut hardlinks = Vec::new();
+        let mut di = HashSet::new();
         for f_path in f_paths {
+            let metadata = f_path.metadata().unwrap();
+            let dev_inode = (metadata.st_dev(), metadata.st_ino());
+            if !di.contains(&dev_inode) {
+                hardlinks.push(f_path);
+                di.insert(dev_inode);
+            }
+        }
+
+        let mut hashes = HashMap::new();
+        for f_path in hardlinks {
             hashes
                 .entry(hash_file(&f_path))
                 .or_insert(Vec::new())
