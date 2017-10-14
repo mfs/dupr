@@ -46,7 +46,7 @@ fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
         let entry = match entry {
             Ok(e) => e,
             Err(err) => {
-                println!("dupr: {}", err); // stderr
+                eprintln!("dupr: {}", err);
                 continue;
             }
         };
@@ -58,7 +58,7 @@ fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
         let metadata = match entry.metadata() {
             Ok(e) => e,
             Err(err) => {
-                println!("dupr: {}", err); //std err
+                eprintln!("dupr: {}", err);
                 continue;
             }
         };
@@ -98,7 +98,7 @@ fn main() {
             let metadata = match f_path.metadata() {
                 Ok(m) => m,
                 Err(err) => {
-                    println!("dupr: {}", err);
+                    eprintln!("dupr: {}", err);
                     continue;
                 }
             };
