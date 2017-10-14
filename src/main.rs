@@ -38,18 +38,30 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 }
 
 
-fn collect_files(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
+fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
-    let mut files = HashMap::new();
+    let mut length_paths = HashMap::new();
 
     for entry in WalkDir::new(path) {
-        let entry = entry.unwrap();
+        let entry = match entry {
+            Ok(e) => e,
+            Err(err) => {
+                println!("dupr: {}", err); // stderr
+                continue;
+            }
+        };
 
         if !entry.file_type().is_file() {
             continue;
         }
 
-        let metadata = entry.metadata().unwrap();
+        let metadata = match entry.metadata() {
+            Ok(e) => e,
+            Err(err) => {
+                println!("dupr: {}", err); //std err
+                continue;
+            }
+        };
 
         if metadata.len() == 0 {
             continue;
@@ -60,10 +72,13 @@ fn collect_files(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
         let path = entry.path().to_path_buf();
 
-        files.entry(metadata.len()).or_insert(Vec::new()).push(path);
+        length_paths
+            .entry(metadata.len())
+            .or_insert(Vec::new())
+            .push(path);
     }
 
-    files
+    length_paths
 }
 
 
@@ -72,7 +87,7 @@ fn main() {
 
     let mut stats: Stats = Default::default();
 
-    let files = collect_files(matches.value_of("DIR").unwrap(), &mut stats);
+    let files = collect_paths(matches.value_of("DIR").unwrap(), &mut stats);
 
     for f_paths in files.values().filter(|x| x.len() > 1) {
 
