@@ -41,8 +41,10 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
     let mut length_paths = HashMap::new();
+    let spinner = ["|", "/", "-", "\\"];
 
-    for entry in WalkDir::new(path) {
+    for (idx, entry) in WalkDir::new(path).into_iter().enumerate() {
+        eprint!("\rBuilding file list {}", spinner[idx % spinner.len()]);
         let entry = match entry {
             Ok(e) => e,
             Err(err) => {
@@ -77,7 +79,7 @@ fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
             .or_insert(Vec::new())
             .push(path);
     }
-
+    eprint!("\r");
     length_paths
 }
 
