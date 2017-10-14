@@ -95,7 +95,13 @@ fn main() {
         let mut hardlinks = Vec::new();
         let mut di = HashSet::new();
         for f_path in f_paths {
-            let metadata = f_path.metadata().unwrap();
+            let metadata = match f_path.metadata() {
+                Ok(m) => m,
+                Err(err) => {
+                    println!("dupr: {}", err);
+                    continue;
+                }
+            };
             let dev_inode = (metadata.st_dev(), metadata.st_ino());
             if !di.contains(&dev_inode) {
                 hardlinks.push(f_path);
