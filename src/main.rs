@@ -3,7 +3,6 @@ extern crate walkdir;
 extern crate twox_hash;
 
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -102,14 +101,9 @@ fn main() {
 
     // iterate over length buckets when no. files > 1
     for (len, paths) in files.iter().filter(|&(_, v)| v.len() > 1) {
-
-        let mut hardlinks = HashSet::new();
+        let mut inode_paths = HashMap::new();
 
         for path in paths {
-            // only save if not a hardlink to existing file
-            // we are still sometimes hashing a file here
-            // that we don't need to when all the paths
-            // are hardlinks to the same file.
             let metadata = match path.metadata() {
                 Ok(m) => m,
                 Err(err) => {
@@ -120,16 +114,18 @@ fn main() {
 
             let dev_inode = (metadata.st_dev(), metadata.st_ino());
 
-            if hardlinks.contains(&dev_inode) {
-                continue;
+            inode_paths.entry(dev_inode).or_insert(Vec::new()).push(
+                path,
+            );
+        }
+
+        if inode_paths.len() > 1 {
+            for paths in inode_paths.values() {
+                len_hash_path
+                    .entry((len, hash_file(paths[0])))
+                    .or_insert(Vec::new())
+                    .push(paths[0]);
             }
-
-            hardlinks.insert(dev_inode);
-
-            len_hash_path
-                .entry((len, hash_file(&path)))
-                .or_insert(Vec::new())
-                .push(path);
         }
     }
 
