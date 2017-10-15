@@ -31,6 +31,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Directory to process")
                 .required(true),
         )
+        .arg(Arg::with_name("noempty").short("n").long("noempty").help(
+            "Exclude zero length files",
+        ))
         .arg(Arg::with_name("summary").short("s").long("summary").help(
             "Print out summary information after duplicates",
         ))
@@ -38,7 +41,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 }
 
 
-fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
+fn collect_paths(path: &str, noempty: bool, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
     let mut length_paths = HashMap::new();
     let spinner = ["|", "/", "-", "\\"];
@@ -65,7 +68,7 @@ fn collect_paths(path: &str, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
             }
         };
 
-        if metadata.len() == 0 {
+        if noempty && metadata.len() == 0 {
             continue;
         }
 
@@ -89,7 +92,7 @@ fn main() {
 
     let mut stats: Stats = Default::default();
 
-    let files = collect_paths(matches.value_of("DIR").unwrap(), &mut stats);
+    let files = collect_paths(matches.value_of("DIR").unwrap(), matches.is_present("noempty"), &mut stats);
 
     let mut len_hash_path = HashMap::new();
 
