@@ -91,40 +91,43 @@ fn main() {
 
     let files = collect_paths(matches.value_of("DIR").unwrap(), &mut stats);
 
-    for f_paths in files.values().filter(|x| x.len() > 1) {
+    let mut len_hash_path = HashMap::new();
 
-        // Avoid hardlinks to same inode
-        let mut hardlinks = Vec::new();
-        let mut di = HashSet::new();
-        for f_path in f_paths {
-            let metadata = match f_path.metadata() {
+    // iterate over length buckets when no. files > 1
+    for (len, paths) in files.iter().filter(|&(_, v)| v.len() > 1) {
+
+        let mut hardlinks = HashSet::new();
+
+        for path in paths {
+            // only save if not a hardlink to existing file
+            let metadata = match path.metadata() {
                 Ok(m) => m,
                 Err(err) => {
                     eprintln!("dupr: {}", err);
                     continue;
                 }
             };
+
             let dev_inode = (metadata.st_dev(), metadata.st_ino());
-            if !di.contains(&dev_inode) {
-                hardlinks.push(f_path);
-                di.insert(dev_inode);
-            }
-        }
 
-        let mut hashes = HashMap::new();
-        for f_path in hardlinks {
-            hashes
-                .entry(hash_file(&f_path))
+            if hardlinks.contains(&dev_inode) {
+                continue;
+            }
+
+            hardlinks.insert(dev_inode);
+
+            len_hash_path
+                .entry((len, hash_file(&path)))
                 .or_insert(Vec::new())
-                .push(f_path);
+                .push(path);
         }
+    }
 
-        for (hash, paths) in hashes.iter().filter(|&(_, v)| v.len() > 1) {
-            stats.duplicate_count += paths.len() as u64;
-            for p in paths {
-                println!("{:016x} - {}", hash, p.display());
-            }
+    for paths in len_hash_path.values().filter(|p| p.len() > 1) {
+        for path in paths {
+            println!("{}", path.display());
         }
+        println!();
     }
 
     if matches.is_present("summary") {
