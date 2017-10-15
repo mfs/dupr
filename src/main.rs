@@ -107,6 +107,9 @@ fn main() {
 
         for path in paths {
             // only save if not a hardlink to existing file
+            // we are still sometimes hashing a file here
+            // that we don't need to when all the paths
+            // are hardlinks to the same file.
             let metadata = match path.metadata() {
                 Ok(m) => m,
                 Err(err) => {
