@@ -92,7 +92,11 @@ fn main() {
 
     let mut stats: Stats = Default::default();
 
-    let files = collect_paths(matches.value_of("DIR").unwrap(), matches.is_present("noempty"), &mut stats);
+    let files = collect_paths(
+        matches.value_of("DIR").unwrap(),
+        matches.is_present("noempty"),
+        &mut stats,
+    );
 
     let mut len_hash_path = HashMap::new();
 
