@@ -2,6 +2,7 @@
 name = "dupr"
 version = "0.1.0"
 authors = ["Mike Sampson <mike@sambodata.com>"]
+license = "MIT"
 
 [dependencies]
 clap = "2.26.2"
