@@ -46,7 +46,7 @@ fn collect_paths(path: &str, noempty: bool, stats: &mut Stats) -> HashMap<u64, V
     let spinner = ["|", "/", "-", "\\"];
 
     for (idx, entry) in WalkDir::new(path).into_iter().enumerate() {
-        eprint!("\rBuilding file list {}", spinner[idx % spinner.len()]);
+        eprint!("\rBuilding file list {} ", spinner[idx % spinner.len()]);
         let entry = match entry {
             Ok(e) => e,
             Err(err) => {
@@ -81,7 +81,8 @@ fn collect_paths(path: &str, noempty: bool, stats: &mut Stats) -> HashMap<u64, V
             .or_insert(Vec::new())
             .push(path);
     }
-    eprint!("\r");
+    eprint!("\r{:40}", " ");
+
     length_paths
 }
 
@@ -97,10 +98,23 @@ fn main() {
         &mut stats,
     );
 
+    let file_count = files.len();
+
     let mut len_hash_path = HashMap::new();
 
-    // iterate over length buckets when no. files > 1
-    for (len, paths) in files.iter().filter(|&(_, v)| v.len() > 1) {
+    for (idx, (len, paths)) in files.iter().enumerate() {
+
+        eprint!(
+            "\rProgress [{}/{}] {:.0}%",
+            idx,
+            file_count,
+            100.0 * idx as f64 / file_count as f64
+        );
+
+        if paths.len() < 2 {
+            continue;
+        }
+
         let mut inode_paths = HashMap::new();
 
         for path in paths {
@@ -128,6 +142,7 @@ fn main() {
             }
         }
     }
+    eprint!("\r{:40}", " ");
 
     for paths in len_hash_path.values().filter(|p| p.len() > 1) {
         for path in paths {
