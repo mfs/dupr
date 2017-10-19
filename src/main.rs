@@ -142,7 +142,7 @@ fn main() {
             }
         }
     }
-    eprint!("\r{:40}", " ");
+    eprint!("\r{:40}\r", " ");
 
     for paths in len_hash_path.values().filter(|p| p.len() > 1) {
         for path in paths {
