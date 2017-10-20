@@ -3,6 +3,7 @@ extern crate walkdir;
 extern crate twox_hash;
 
 use std::collections::HashMap;
+use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -137,14 +138,17 @@ fn main() {
             for paths in inode_paths.values() {
                 len_hash_path
                     .entry((len, hash_file(paths[0])))
-                    .or_insert(Vec::new())
-                    .push(paths[0]);
+                    .or_insert(BTreeSet::new())
+                    .insert(paths[0]);
             }
         }
     }
     eprint!("\r{:40}\r", " ");
 
-    for paths in len_hash_path.values().filter(|p| p.len() > 1) {
+    let mut keys:Vec<_> = len_hash_path.iter().filter(|&(_,v)| v.len() > 1).collect();
+    keys.sort();
+
+    for (_, paths) in keys {
         for path in paths {
             println!("{}", path.display());
         }
