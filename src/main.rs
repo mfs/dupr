@@ -147,6 +147,7 @@ fn main() {
 
     let mut keys:Vec<_> = len_hash_path.iter().filter(|&(_,v)| v.len() > 1).collect();
     keys.sort();
+    stats.duplicate_count = keys.len() as u64;
 
     for (_, paths) in keys {
         for path in paths {
