@@ -37,6 +37,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .arg(Arg::with_name("summary").short("s").long("summary").help(
             "Print out summary information after duplicates",
         ))
+        .arg(Arg::with_name("size").short("S").long("size").help(
+            "Show size of duplicate files",
+        ))
         .get_matches()
 }
 
@@ -149,7 +152,10 @@ fn main() {
     keys.sort();
     stats.duplicate_count = keys.len() as u64;
 
-    for (_, paths) in keys {
+    for (&(len, _), paths) in keys {
+        if matches.is_present("size") {
+            println!("{} bytes each:", len);
+        }
         for path in paths {
             println!("{}", path.display());
         }
