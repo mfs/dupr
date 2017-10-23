@@ -102,22 +102,23 @@ fn main() {
         &mut stats,
     );
 
-    let file_count = files.len();
-
     let mut len_hash_path = HashMap::new();
+    let mut paths_completed = 0;
 
-    for (idx, (len, paths)) in files.iter().enumerate() {
+    for (len, paths) in &files {
 
         eprint!(
             "\rProgress [{}/{}] {:.0}%",
-            idx,
-            file_count,
-            100.0 * idx as f64 / file_count as f64
+            paths_completed,
+            stats.file_count,
+            100.0 * paths_completed as f64 / stats.file_count as f64
         );
 
         if paths.len() < 2 {
             continue;
         }
+
+        paths_completed += paths.len();
 
         let mut inode_paths = HashMap::new();
 
