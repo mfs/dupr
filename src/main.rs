@@ -31,6 +31,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Directory to process")
                 .required(true),
         )
+        .arg(Arg::with_name("sameline").short("1").long("sameline").help(
+            "List each set of matches on a single line",
+        ))
         .arg(Arg::with_name("noempty").short("n").long("noempty").help(
             "Exclude zero length files",
         ))
@@ -157,10 +160,16 @@ fn main() {
         if matches.is_present("size") {
             println!("{} bytes each:", len);
         }
-        for path in paths {
-            println!("{}", path.display());
+
+        if matches.is_present("sameline") {
+            let p: Vec<_> = paths.iter().map(|x| x.to_string_lossy()).collect();
+            println!("{}", p.join("-"));
+        } else {
+            for path in paths {
+                println!("{}", path.display());
+            }
+            println!();
         }
-        println!();
     }
 
     if matches.is_present("summary") {
