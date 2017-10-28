@@ -31,9 +31,12 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Directory to process")
                 .required(true),
         )
-        .arg(Arg::with_name("sameline").short("1").long("sameline").help(
-            "List each set of matches on a single line",
-        ))
+        .arg(
+            Arg::with_name("sameline")
+                .short("1")
+                .long("sameline")
+                .help("List each set of matches on a single line"),
+        )
         .arg(Arg::with_name("noempty").short("n").long("noempty").help(
             "Exclude zero length files",
         ))
@@ -152,7 +155,7 @@ fn main() {
     }
     eprint!("\r{:40}\r", " ");
 
-    let mut keys:Vec<_> = len_hash_path.iter().filter(|&(_,v)| v.len() > 1).collect();
+    let mut keys: Vec<_> = len_hash_path.iter().filter(|&(_, v)| v.len() > 1).collect();
     keys.sort();
     stats.duplicate_count = keys.len() as u64;
 
