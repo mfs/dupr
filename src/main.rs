@@ -46,17 +46,24 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .arg(Arg::with_name("size").short("S").long("size").help(
             "Show size of duplicate files",
         ))
+        .arg(Arg::with_name("quiet").short("q").long("quiet").help(
+            "Hide progress indicator",
+        ))
         .get_matches()
 }
 
 
-fn collect_paths(path: &str, noempty: bool, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
+fn collect_paths(matches: &ArgMatches, stats: &mut Stats) -> HashMap<u64, Vec<PathBuf>> {
 
     let mut length_paths = HashMap::new();
     let spinner = ["|", "/", "-", "\\"];
 
-    for (idx, entry) in WalkDir::new(path).into_iter().enumerate() {
-        eprint!("\rBuilding file list {} ", spinner[idx % spinner.len()]);
+    let dir = matches.value_of("DIR").unwrap();
+
+    for (idx, entry) in WalkDir::new(dir).into_iter().enumerate() {
+        if !matches.is_present("quiet") {
+            eprint!("\rBuilding file list {} ", spinner[idx % spinner.len()]);
+        }
         let entry = match entry {
             Ok(e) => e,
             Err(err) => {
@@ -77,7 +84,7 @@ fn collect_paths(path: &str, noempty: bool, stats: &mut Stats) -> HashMap<u64, V
             }
         };
 
-        if noempty && metadata.len() == 0 {
+        if matches.is_present("noempty") && metadata.len() == 0 {
             continue;
         }
 
@@ -102,23 +109,20 @@ fn main() {
 
     let mut stats: Stats = Default::default();
 
-    let files = collect_paths(
-        matches.value_of("DIR").unwrap(),
-        matches.is_present("noempty"),
-        &mut stats,
-    );
+    let files = collect_paths(&matches, &mut stats);
 
     let mut len_hash_path = HashMap::new();
     let mut paths_completed = 0;
 
     for (len, paths) in &files {
-
-        eprint!(
-            "\rProgress [{}/{}] {:.0}%",
-            paths_completed,
-            stats.file_count,
-            100.0 * paths_completed as f64 / stats.file_count as f64
-        );
+        if !matches.is_present("quiet") {
+            eprint!(
+                "\rProgress [{}/{}] {:.0}%",
+                paths_completed,
+                stats.file_count,
+                100.0 * paths_completed as f64 / stats.file_count as f64
+            );
+        }
 
         if paths.len() < 2 {
             continue;
