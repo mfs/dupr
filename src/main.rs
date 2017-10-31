@@ -49,6 +49,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .arg(Arg::with_name("quiet").short("q").long("quiet").help(
             "Hide progress indicator",
         ))
+        .arg(Arg::with_name("recurse").short("r").long("recurse").help(
+            "Recurse into subdirectories"
+        ))
         .get_matches()
 }
 
@@ -60,7 +63,12 @@ fn collect_paths(matches: &ArgMatches, stats: &mut Stats) -> HashMap<u64, Vec<Pa
 
     let dir = matches.value_of("DIR").unwrap();
 
-    for (idx, entry) in WalkDir::new(dir).into_iter().enumerate() {
+    let walkdir = match matches.is_present("recurse") {
+        true  => WalkDir::new(dir).into_iter().enumerate(),
+        false => WalkDir::new(dir).max_depth(1).into_iter().enumerate(),
+    };
+
+    for (idx, entry) in walkdir {
         if !matches.is_present("quiet") {
             eprint!("\rBuilding file list {} ", spinner[idx % spinner.len()]);
         }
